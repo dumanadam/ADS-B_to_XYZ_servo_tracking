@@ -9,6 +9,9 @@
 #include <Math.h>
 #include <credentials.h>
 
+#define eaRa 6371 // Earths Radius
+#define toRad (3.1415926536 / 180) // To Radian
+
 //Variables to be edited 
 
 int servoBotPin = 5;
@@ -30,6 +33,8 @@ double servoPosition[2];
 double servoStart[] = {servoBotMin,servoTopMin};
 double servoMid[] = {((servoBotMax-servoBotMin)/2) + servoBotMin,((servoTopMax-servoTopMin)/2) + servoTopMin};
 double servoEnd[] = {servoBotMax,servoTopMax};
+
+
 
 // Functions
 
@@ -69,11 +74,7 @@ void positionServosXY(int servoBotPosition = servoPosition[0], int ServoTopPosit
   Serial.println(ServoTopPosition);
   servoBot.writeMicroseconds(servoBotPosition);
   servoTop.writeMicroseconds(ServoTopPosition);
-  delay(2000);
-  Serial.println("servo reset");
-  servoBot.writeMicroseconds(servoMid[0]);
-  servoTop.writeMicroseconds(servoMid[1]);
-  delay(1000);
+  delay(15);
 }
 
 void bootSequence() {
@@ -119,27 +120,6 @@ void bootSequence() {
     return a;
 }
 
-double bearing(double currentLat,double currentLon,double acLat,double acLon){
-
-    double teta1 = radians(currentLat);
-    double teta2 = radians(acLat);
-    double delta1 = radians(acLat - currentLat);
-    double delta2 = radians(acLon-currentLon);
-
-    //==================Heading Formula Calculation================//
-
-    double y = sin(delta2) * cos(teta2);
-    double x = cos(teta1)*sin(teta2) - sin(teta1)*cos(teta2)*cos(delta2);
-    double brng = atan2(y,x);
-    brng = degrees(brng);// radians to degrees
-    brng = ( ((int)brng + 360) % 360 ); 
-
-    Serial.print("Heading GPS: ");
-    Serial.println(brng);
-
-    return brng;
-  }
-
   double bearingtoX(double bearing){
     if(bearing>=270 && bearing < 359) {
       servoPosition[0]= 0;
@@ -155,12 +135,31 @@ double bearing(double currentLat,double currentLon,double acLat,double acLon){
       servoPosition[1]= servoStart[1] + (((int)bearing % 180) / q4Multiplier);;
 
     } else Serial.println("Bearing Out Of Bounds");
+    Serial.print("calculated servoPosition[1] ======> ");
+    Serial.println(servoPosition[1]);
+    delay(15);
+    if(servoPosition[1] >= servoTopMax) {
+      servoPosition[1] = servoTopMax;
+      Serial.println("Hit max");
+      }
+    if(servoPosition[1] <= servoTopMin) {
+      servoPosition[1] = servoTopMin;
+      Serial.println("Hit min");
+    }
 
   }
 
-
-
-
+double calculateDistance(double currentLat,double currentLon,double acLat,double acLon)
+{
+	double dx, dy, dz;
+	currentLon -= acLon;
+	currentLon *= toRad, currentLat *= toRad, acLat *= toRad;
+ 
+	dz = sin(currentLat) - sin(acLat);
+	dx = cos(currentLon) * cos(currentLat) - cos(acLat);
+	dy = sin(currentLon) * cos(currentLat);
+	return asin(sqrt(dx * dx + dy * dy + dz * dz) / 2) * 2 * eaRa;
+}
 
 
 
@@ -213,22 +212,39 @@ void loop()
   int states_0_16 = states_0[16]; // 0
    Serial.println("finish setup");
 
+  double distance  = calculateDistance(currentLat,currentLon,states_0_6,states_0_5);
+  Serial.print("distance  out of loop:");
+  Serial.println(distance);
+  delay(1000);
+
+
 for (size_t i = 0; i < 10; i++)
 {
-  double flightBearing = bearing(currentLat,currentLon,states_0_6,states_0_5);
-Serial.print("flightBearing :");
-Serial.println(flightBearing);
-delay(500);
-bearingtoX(flightBearing);
+  
 
-positionServosXY();
-delay(1000);
+
 double direction = getDirection(currentLat,currentLon,states_0_6,states_0_5);
 Serial.print("direction :");
 Serial.println(direction);
+bearingtoX(direction);
+ Serial.print("servobotpos and top pos");
+  Serial.println(servoPosition[0]);
+  Serial.println(servoPosition[1]);
+  Serial.println("");
+positionServosXY();
 delay(1000);
-  states_0_5 += .2542;
+  states_0_5 -= .01;
   /* code */
+
+  Serial.println("");
+  Serial.println("");
+  double distance  = calculateDistance(currentLat,currentLon,states_0_6,states_0_5);
+  Serial.print("distance in loop :");
+  Serial.println(distance);
+  delay(1000);
+  Serial.println("");
+  Serial.println("");
+
 }
 
 
