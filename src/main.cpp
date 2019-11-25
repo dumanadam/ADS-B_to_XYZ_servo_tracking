@@ -62,13 +62,13 @@ void positionServos(String position = "NA") {
 
   }
 
-void positionServosXY(int servoBotPosition = 500, int ServoTopPosition = 500 ){
+void positionServosXY(int servoBotPosition = servoPosition[0], int ServoTopPosition = servoPosition[1] ){
   Serial.print("servo bot moved to:");
-  Serial.println(servoPosition[0]);
+  Serial.println(servoBotPosition);
   Serial.print("servo top moved to:");
-  Serial.println(servoPosition[1]);
-  servoBot.writeMicroseconds(servoPosition[0]);
-  servoTop.writeMicroseconds(servoPosition[1]);
+  Serial.println(ServoTopPosition);
+  servoBot.writeMicroseconds(servoBotPosition);
+  servoTop.writeMicroseconds(ServoTopPosition);
   delay(2000);
   Serial.println("servo reset");
   servoBot.writeMicroseconds(servoMid[0]);
@@ -77,14 +77,14 @@ void positionServosXY(int servoBotPosition = 500, int ServoTopPosition = 500 ){
 }
 
 void bootSequence() {
-    for (int pos = 2200; pos <= servoBotMax; pos += 1) { // goes from 0 degrees to 180 degrees
+    for (int pos = 500; pos <= servoBotMax; pos += 1) { // goes from 0 degrees to 180 degrees
     Serial.print("bootSequence  servoBot pos = >");
     Serial.println(pos);
     // in steps of 1 degree
     servoBot.writeMicroseconds(pos);              // tell servo to go to position in variable 'pos'
     delay(10);                       // waits 15ms for the servo to reach the position
   }
-  for (int pos = 1700; pos >= servoTopMax; pos -= 1) { // goes from 180 degrees to 0 degrees
+  for (int pos = 500; pos<= servoTopMax; pos += 1) { // goes from 180 degrees to 0 degrees
   Serial.print("bootSequence  servoTop pos = >");
     Serial.println(pos);
     servoTop.writeMicroseconds(pos);              // tell servo to go to position in variable 'pos'
@@ -143,16 +143,16 @@ double bearing(double currentLat,double currentLon,double acLat,double acLon){
   double bearingtoX(double bearing){
     if(bearing>=270 && bearing < 359) {
       servoPosition[0]= 0;
-      servoPosition[1]= ((int)bearing % 270) / q1Multiplier;
+      servoPosition[1]= servoStart[1] + (((int)bearing % 270) / q1Multiplier);
     } else if(bearing>=0 && bearing < 89) {
       servoPosition[0]= 0;
-      servoPosition[1]= bearing*q2Multiplier;
+      servoPosition[1]= servoMid[1] + (bearing*q2Multiplier);
     } else if(bearing>=90 && bearing < 179) {
       servoPosition[0]= 180;
-      servoPosition[1]= bearing;
+      servoPosition[1]= servoMid[1] + (bearing*q2Multiplier);
     } else if(bearing>=180 && bearing < 269) {
       servoPosition[0]= 180;
-      servoPosition[1]= ((int)bearing % 180) / q4Multiplier;
+      servoPosition[1]= servoStart[1] + (((int)bearing % 180) / q4Multiplier);;
 
     } else Serial.println("Bearing Out Of Bounds");
 
@@ -180,6 +180,11 @@ void setup()
   servoBot.writeMicroseconds(servoMid[0]);
   servoTop.writeMicroseconds(servoMid[1]);
   delay(500);
+
+}
+
+void loop()
+{
     const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_ARRAY_SIZE(17) + JSON_OBJECT_SIZE(2) + 50;
   DynamicJsonDocument doc(capacity);
 
@@ -207,38 +212,43 @@ void setup()
   bool states_0_15 = states_0[15]; // false
   int states_0_16 = states_0[16]; // 0
    Serial.println("finish setup");
+
+for (size_t i = 0; i < 10; i++)
+{
+  double flightBearing = bearing(currentLat,currentLon,states_0_6,states_0_5);
+Serial.print("flightBearing :");
+Serial.println(flightBearing);
+delay(500);
+bearingtoX(flightBearing);
+
+positionServosXY();
+delay(1000);
+double direction = getDirection(currentLat,currentLon,states_0_6,states_0_5);
+Serial.print("direction :");
+Serial.println(direction);
+delay(1000);
+  states_0_5 += .2542;
+  /* code */
 }
 
-void loop()
-{
 
 
- Serial.println("start");
- positionServos("start");
-  delay(1000);
-  Serial.println("mid");
- positionServos("mid");
-  delay(1000);
- Serial.println("end");
- positionServos("end");
-  delay(1000);
-  //bootSequence();
-  //servoBot.writeMicroseconds(500);              // tell servo to go to position in variable 'pos'
- // delay(500);                       // waits 15ms for the servo to reach the position
- // servoTop.writeMicroseconds(500);              // tell servo to go to position in variable 'pos'
- // delay(500);                       // waits 15ms for the servo to reach the position
- // double flightBearing = bearing(currentLat,currentLon,states_0_6,states_0_5);
- // Serial.print("flightBearing :");
-//  Serial.println(flightBearing);
- // delay(500);
-//  bearingtoX(flightBearing);
- // positionServos();
- // delay(1000);
- // double direction = getDirection(currentLat,currentLon,states_0_6,states_0_5);
-//  Serial.print("direction :");
-  //Serial.println(direction);
-  //delay(1000);
+/* Serial.println("start");
+positionServos("start");
+delay(1000);
+Serial.println("mid");
+positionServos("mid");
+delay(1000);
+Serial.println("end");
+positionServos("end");
+delay(1000);
+bootSequence();
+servoBot.writeMicroseconds(500);              // tell servo to go to position in variable 'pos'
+delay(2000);                       // waits 15ms for the servo to reach the position
+servoTop.writeMicroseconds(500);              // tell servo to go to position in variable 'pos'
+delay(500);                       // waits 15ms for the servo to reach the position
 
+ */
 }
 
 

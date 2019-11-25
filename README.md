@@ -5,6 +5,7 @@ Hardware used and more information will be updated on the blog [here](https://ta
 
 ## TO DO
 * Selectable aircraft tracking
+* Manual Joystick control
 * LCD support 
 * Physical Button support
 
