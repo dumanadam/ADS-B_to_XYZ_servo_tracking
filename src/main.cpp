@@ -28,35 +28,53 @@ double q4Multiplier = 11.1;
 Servo servoBot; Servo servoTop; 
 double servoPosition[2]; 
 double servoStart[] = {servoBotMin,servoTopMin};
-double servoMid[] = {(servoBotMax-servoBotMax)/2,(servoTopMax-servoTopMin)/2};
+double servoMid[] = {((servoBotMax-servoBotMin)/2) + servoBotMin,((servoTopMax-servoTopMin)/2) + servoTopMin};
 double servoEnd[] = {servoBotMax,servoTopMax};
 
 // Functions
 
-void positionServos(String position = "NA", int servoBotPosition = 0, int ServoTopPosition = 0 ) {
+void positionServos(String position = "NA") {
   if(position == "start") {
+    Serial.println("Servo pos  = start ");
     servoPosition[0] = servoStart[0];
     servoPosition[1] = servoStart[1];
   } else if(position == "mid") {
+    Serial.println("Servo pos  = mid");
     servoPosition[0] = servoMid[0];
     servoPosition[1] = servoMid[1];
   } else if(position == "end") {
+    Serial.println("Servo pos  = end");
     servoPosition[0] = servoEnd[0];
     servoPosition[1] = servoEnd[1];
-  }
-    Serial.print("servo bot moved to:");
-    Serial.println(servoPosition[0]);
-        Serial.print("servo bot moved to:");
-    Serial.println(servoPosition[0]);
-    servoBot.writeMicroseconds(servoPosition[0]);
-    servoTop.writeMicroseconds(servoPosition[1]);
-    delay(2000);
-    Serial.println("servo reset");
-    servoBot.writeMicroseconds(servoMid[0]);
-    servoTop.writeMicroseconds(servoMid[1]);
-    delay(1000);
+  } else {
+    Serial.println("Servo pos  = nothing");
+    servoPosition[0] = servoMid[0];
+    servoPosition[1] = servoMid[1];
+    }
+  Serial.print("Servo position servo  = bot");
+  Serial.println(servoPosition[0]);
+  Serial.print("Servo position servo  = top");
+  Serial.println(servoPosition[1]);
+  servoBot.writeMicroseconds(servoPosition[0]);
+  delay(100);
+  servoTop.writeMicroseconds(servoPosition[1]);
+  delay(100);
+
   }
 
+void positionServosXY(int servoBotPosition = 500, int ServoTopPosition = 500 ){
+  Serial.print("servo bot moved to:");
+  Serial.println(servoPosition[0]);
+  Serial.print("servo top moved to:");
+  Serial.println(servoPosition[1]);
+  servoBot.writeMicroseconds(servoPosition[0]);
+  servoTop.writeMicroseconds(servoPosition[1]);
+  delay(2000);
+  Serial.println("servo reset");
+  servoBot.writeMicroseconds(servoMid[0]);
+  servoTop.writeMicroseconds(servoMid[1]);
+  delay(1000);
+}
 
 void bootSequence() {
     for (int pos = 2200; pos <= servoBotMax; pos += 1) { // goes from 0 degrees to 180 degrees
@@ -64,16 +82,16 @@ void bootSequence() {
     Serial.println(pos);
     // in steps of 1 degree
     servoBot.writeMicroseconds(pos);              // tell servo to go to position in variable 'pos'
-    delay(1);                       // waits 15ms for the servo to reach the position
+    delay(10);                       // waits 15ms for the servo to reach the position
   }
   for (int pos = 1700; pos >= servoTopMax; pos -= 1) { // goes from 180 degrees to 0 degrees
   Serial.print("bootSequence  servoTop pos = >");
     Serial.println(pos);
     servoTop.writeMicroseconds(pos);              // tell servo to go to position in variable 'pos'
-    delay(1);                       // waits 15ms for the servo to reach the position
+    delay(10);                       // waits 15ms for the servo to reach the position
   }
   
-  positionServos();
+
 }
 
   float toRadians(float angle) {
@@ -140,17 +158,7 @@ double bearing(double currentLat,double currentLon,double acLat,double acLon){
 
   }
 
-  void positionServos(int ) {
-    Serial.print("servo bot moved to:");
-    Serial.println(servoPosition[0]);
-    servoBot.writeMicroseconds(servoPosition[0]);
-    servoTop.writeMicroseconds(servoPosition[1]);
-    delay(2000);
-    Serial.println("servo reset");
-    servoBot.writeMicroseconds(servoMid[0]);
-    servoTop.writeMicroseconds(servoMid[1]);
-    delay(1000);
-  }
+
 
 
 
@@ -160,7 +168,7 @@ double bearing(double currentLat,double currentLon,double acLat,double acLon){
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   WiFiManager wifiManager;
   wifiManager.autoConnect("ADS-B Tracker");
   Serial.println("Connected!");
@@ -205,21 +213,27 @@ void loop()
 {
 
 
- Serial.println("states");
-
-  delay(500);
-  bootSequence();
- // servoBot.writeMicroseconds(500);              // tell servo to go to position in variable 'pos'
-  delay(500);                       // waits 15ms for the servo to reach the position
+ Serial.println("start");
+ positionServos("start");
+  delay(1000);
+  Serial.println("mid");
+ positionServos("mid");
+  delay(1000);
+ Serial.println("end");
+ positionServos("end");
+  delay(1000);
+  //bootSequence();
+  //servoBot.writeMicroseconds(500);              // tell servo to go to position in variable 'pos'
+ // delay(500);                       // waits 15ms for the servo to reach the position
  // servoTop.writeMicroseconds(500);              // tell servo to go to position in variable 'pos'
-  delay(500);                       // waits 15ms for the servo to reach the position
+ // delay(500);                       // waits 15ms for the servo to reach the position
  // double flightBearing = bearing(currentLat,currentLon,states_0_6,states_0_5);
  // Serial.print("flightBearing :");
 //  Serial.println(flightBearing);
  // delay(500);
 //  bearingtoX(flightBearing);
  // positionServos();
-  delay(1000);
+ // delay(1000);
  // double direction = getDirection(currentLat,currentLon,states_0_6,states_0_5);
 //  Serial.print("direction :");
   //Serial.println(direction);
